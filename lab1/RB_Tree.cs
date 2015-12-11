@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Msagl;
 
 namespace lab1
 {
@@ -11,6 +12,7 @@ namespace lab1
 
         public Form1 form;
         public RB_Node root;
+
         public RB_Tree(int data, Form1 form) // конструктор для создания дерева начиная с корня
         {
             this.root = new RB_Node(data);
@@ -27,7 +29,7 @@ namespace lab1
                 while (x != null)
                 {
                     y = x;
-                    if (z.data < y.data)
+                    if (z.data < x.data) //y заменил на x
                         x = x.left;
                     else
                         x = x.right;
@@ -43,8 +45,9 @@ namespace lab1
                         y.right = z;
                 }
                 ///////////////////////////from book
-                z.left = null;
-                z.right = null;
+                // мы это и так не инициализируем, поу-молчанию тут null
+                //z.left = null;
+                //z.right = null;
                 z.isRed = true;
                 ///////////////////////////
                 RB_Insert_Fixup(z);
@@ -52,64 +55,66 @@ namespace lab1
            // else
                 //++Tree_Search(root, key).count;
         }
+
         public void RB_Insert_Fixup(RB_Node z) // переставляет элементы согласно правилам RB_Tree
         {
-           while (z != root && z.parent.isRed == true) // z!= root для того что бы не делать родитель корня 
+            while (z != root && z.parent.isRed) // z!= root для того что бы не делать родитель корня 
+            {
+                if (z.parent.parent != null && z.parent == z.parent.parent.left)
                 {
-                    if (z.parent == z.parent.parent.left)
-                        {
-                            RB_Node f = z.parent.parent.right;
-                            if (f != null && f.isRed == true) // f! = null когда уходит влево ветка (не создаю нулевые листья) 
-                                {
-                                    z.parent.isRed = false;
-                                    f.isRed = false;
-                                    z.parent.parent.isRed = true;
-                                    z = z.parent.parent;
+                    RB_Node y = z.parent.parent.right;
+                    if (y != null && y.isRed) // f! = null когда уходит влево ветка (не создаю нулевые листья) 
+                    {
+                        z.parent.isRed = false;
+                        y.isRed = false;
+                        z.parent.parent.isRed = true;
+                        z = z.parent.parent;
 
-                                }
-                             else
-                                {
-                                 if (z == z.parent.right)
-                                    {
-                                        z = z.parent;
-                                        Left_Rotate(z);
-                                    }
-                                    z.parent.isRed = false;
-                                    z.parent.parent.isRed = true;
-                                    Right_Rotate(z.parent.parent);
-                                    ///////////////////////////
-                                    root.parent = null;
-                                    ///////////////////////////
-                                }
-                         }
-                       else
-                         {
-                            RB_Node f = z.parent.parent.left;
-                            if (f != null && f.isRed == true) // f! = null когда уходит вправо ветка (не создаю нулевые листья) 
-                                {
-                                    z.parent.isRed = false;
-                                    f.isRed = false;
-                                    z.parent.parent.isRed = true;
-                                    z = z.parent.parent;
-                                }
-                            else
-                                {
-                                    if (z == z.parent.left)
-                                        {
-                                            z = z.parent;
-                                            Right_Rotate(z);
-                                        }
-                                    z.parent.isRed = false;
-                                    z.parent.parent.isRed = true;
-                                    Left_Rotate(z.parent.parent);
-                                    ///////////////////////////
-                                    root.parent = null;
-                                    ///////////////////////////
-                                }
-                            }
                     }
-                    root.isRed = false;
+                    else
+                    {
+                        if (z == z.parent.right)
+                        {
+                            z = z.parent;
+                            Left_Rotate(z);
+                        }
+                        z.parent.isRed = false;
+                        z.parent.parent.isRed = true;
+                        Right_Rotate(z.parent.parent);
+                        ///////////////////////////
+                        root.parent = null;
+                        ///////////////////////////
+                    }
                 }
+                else
+                {
+                    RB_Node y = z.parent.parent.left;
+                    if (y != null && y.isRed) // f! = null когда уходит вправо ветка (не создаю нулевые листья) 
+                    {
+                        z.parent.isRed = false;
+                        y.isRed = false;
+                        z.parent.parent.isRed = true;
+                        z = z.parent.parent;
+                    }
+                    else
+                    {
+                        if (z == z.parent.left)
+                        {
+                            z = z.parent;
+                            Right_Rotate(z);
+                        }
+                        z.parent.isRed = false;
+                        z.parent.parent.isRed = true;
+                        Left_Rotate(z.parent.parent);
+                        ///////////////////////////
+                        root.parent = null;
+                        ///////////////////////////
+                    }
+                }
+            }
+            root.isRed = false;
+        }
+
         public void Left_Rotate(RB_Node x) // левый поворот
         {
             RB_Node f = x.right;
@@ -204,7 +209,6 @@ namespace lab1
             viewer = new Microsoft.Msagl.GraphViewerGdi.GViewer();
             graph = new Microsoft.Msagl.Drawing.Graph("graph");
 
-
            /* graph.AddEdge("A", "B");
             graph.AddEdge("B", "C");
             graph.AddEdge("A", "C").Attr.Color = Microsoft.Msagl.Drawing.Color.Green;
@@ -218,12 +222,11 @@ namespace lab1
 
             viewer.Graph = graph;
 
-
             form.tabControl1.TabPages[1].SuspendLayout();
-            viewer.Dock = System.Windows.Forms.DockStyle.Fill;
+            viewer.Dock = System.Windows.Forms.DockStyle.Top;
             form.tabControl1.TabPages[1].Controls.Add(viewer);
             form.tabControl1.TabPages[1].ResumeLayout();
-            
+
         }
 
         void print(RB_Node node) //вывод поддерева

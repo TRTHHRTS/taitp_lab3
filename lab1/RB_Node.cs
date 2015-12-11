@@ -19,8 +19,8 @@ namespace lab1
        // public int count; //количество элементов с таким значением
 
         //конструктор принимает значение узла
-        public RB_Node()
-        { }
+        public RB_Node() {}
+
         public RB_Node(int data)
         {
             this.data = data;
@@ -31,8 +31,7 @@ namespace lab1
             this.isRed = false;
         }
         //конструктор, в котором можно указать родителя
-        public RB_Node(int key, RB_Node parent)
-            : this(key)
+        public RB_Node(int key, RB_Node parent) : this(key)
         {
             this.parent = parent;
         }

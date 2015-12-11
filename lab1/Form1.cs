@@ -179,7 +179,7 @@ namespace lab1
 
                 }
             }
-            catch (OperationCanceledException exception)
+            catch (OperationCanceledException)
             {
                 MessageBox.Show("Отмена");
                 tokenSource2.Dispose();
@@ -278,22 +278,22 @@ namespace lab1
 
         }
 
-        private RB_Tree tree;
+        static private RB_Tree tree;
         private void button3_Click(object sender, EventArgs e)
         {
             rnd = new Random(DateTime.Now.Millisecond);
             toolStripStatusLabel1.ForeColor = Color.Blue;
             toolStripStatusLabel1.Text = "Выполняется";
             int countValue;
-            if (Int32.TryParse(textBox5.Text, out countValue))
+            if (int.TryParse(textBox5.Text, out countValue))
                 if (countValue > 0)
                 {
                     //my_array = randomArray(countValue, 1, countValue * 2);
-                    my_array = new int[]{3,2,4,9,6};
+                    my_array = new[]{3,2,4,9,6,8,7,5};
                     tree = new RB_Tree(my_array[0], this);
-                    for (int i = 1; i < countValue; i++)
+                    for (var i = 1; i < countValue; i++)
                     {
-                        tree.RB_Insert(my_array[i]);
+                        tree.RB_Insert(rnd.Next(0,40));
                     }
                     tree.printTree();
                 }
@@ -314,17 +314,24 @@ namespace lab1
             toolStripStatusLabel1.Text = "Выполнено";
         }
 
+        private static readonly ManualResetEvent mre = new ManualResetEvent(false);
+
         private void button4_Click(object sender, EventArgs e)
         {
             toolStripStatusLabel1.ForeColor = Color.Blue;
             toolStripStatusLabel1.Text = "Выполняется";
-            int addingValue = 0;
-            if (Int32.TryParse(textBox6.Text, out addingValue))
+            MessageBox.Show("next");
+            int addingValue;
+            if (int.TryParse(textBox6.Text, out addingValue))
+            {
                 if (addingValue > 0)
                 {
                     if (!tree.Search(addingValue))
                     {
-                        tree.RB_Insert(addingValue);
+                        Thread myThread = StartTheThread(addingValue); //Создаем новый объект потока (Thread)
+                        //tree.RB_Insert(addingValue);
+                        //tree.printTree();
+
                     }
                     else
                     {
@@ -338,17 +345,38 @@ namespace lab1
                 {
                     toolStripStatusLabel1.ForeColor = Color.Red;
                     toolStripStatusLabel1.Text = "Неверно введены данные";
-                    MessageBox.Show("Введены неверные данные", "Внимание");
+                    MessageBox.Show("Значение узла в дереве должно быть больше 0", "Внимание");
                 }
-
+            }
             else
             {
                 toolStripStatusLabel1.ForeColor = Color.Red;
                 toolStripStatusLabel1.Text = "Неверно введены данные";
-                MessageBox.Show("Значение узла в дереве должно быть больше 0", "Внимание");
+                MessageBox.Show("Введены неверные данные", "Внимание");
             }
+
             toolStripStatusLabel1.ForeColor = Color.Green;
             toolStripStatusLabel1.Text = "Выполнено";
+        }
+
+        public Thread StartTheThread(int addingValue)
+        {
+            var t = new Thread(() => RealStart(addingValue));
+            t.Start();
+            return t;
+        }
+
+        private static void RealStart(int addingValue)
+        {
+            mre.WaitOne();
+            MessageBox.Show("next2");
+            tree.RB_Insert(addingValue);
+            tree.printTree();
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            mre.Set();
         }
     }
 }
