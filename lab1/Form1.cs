@@ -20,6 +20,9 @@ namespace lab1
             InitializeComponent();
         }
 
+        public static bool IS_STEP_BY_STEP;
+        public static readonly ManualResetEvent MRE = new ManualResetEvent(false);
+
         private int begin_value;
         private int end_value;
         private int pixels_count;
@@ -289,8 +292,8 @@ namespace lab1
                 if (countValue > 0)
                 {
                     //my_array = randomArray(countValue, 1, countValue * 2);
-                    my_array = new[]{3,2,4,9,6,8,7,5};
-                    tree = new RB_Tree(my_array[0], this);
+                    //my_array = new[]{3,2,4,9,6,8,7,5};
+                    tree = new RB_Tree(rnd.Next(0, 40), this);
                     for (var i = 1; i < countValue; i++)
                     {
                         tree.RB_Insert(rnd.Next(0,40));
@@ -314,13 +317,21 @@ namespace lab1
             toolStripStatusLabel1.Text = "Выполнено";
         }
 
-        private static readonly ManualResetEvent mre = new ManualResetEvent(false);
+        
 
         private void button4_Click(object sender, EventArgs e)
         {
             toolStripStatusLabel1.ForeColor = Color.Blue;
             toolStripStatusLabel1.Text = "Выполняется";
-            MessageBox.Show("next");
+
+            //Настраиваем окружение, чтобы выполнять алгоритм по шагам.
+            richTextBox1.Clear();
+            button5.Enabled = true;
+            button3.Enabled = false;
+            button4.Enabled = false;
+            richTextBox1.Text += "НАЧАЛО \n";
+            IS_STEP_BY_STEP = true;
+
             int addingValue;
             if (int.TryParse(textBox6.Text, out addingValue))
             {
@@ -328,15 +339,14 @@ namespace lab1
                 {
                     if (!tree.Search(addingValue))
                     {
-                        Thread myThread = StartTheThread(addingValue); //Создаем новый объект потока (Thread)
-                        //tree.RB_Insert(addingValue);
-                        //tree.printTree();
-
+                        //Создаем новый объект потока (Thread)
+                        var myThread = StartTheThread(addingValue, this); 
                     }
                     else
                     {
                         toolStripStatusLabel1.ForeColor = Color.Red;
                         toolStripStatusLabel1.Text = "Неверно введены данные";
+                        setControlsToBegin();
                         MessageBox.Show("В дереве уже есть узел с таким значением", "Внимание");
                     }
 
@@ -345,6 +355,7 @@ namespace lab1
                 {
                     toolStripStatusLabel1.ForeColor = Color.Red;
                     toolStripStatusLabel1.Text = "Неверно введены данные";
+                    setControlsToBegin();
                     MessageBox.Show("Значение узла в дереве должно быть больше 0", "Внимание");
                 }
             }
@@ -352,6 +363,7 @@ namespace lab1
             {
                 toolStripStatusLabel1.ForeColor = Color.Red;
                 toolStripStatusLabel1.Text = "Неверно введены данные";
+                setControlsToBegin();
                 MessageBox.Show("Введены неверные данные", "Внимание");
             }
 
@@ -359,24 +371,37 @@ namespace lab1
             toolStripStatusLabel1.Text = "Выполнено";
         }
 
-        public Thread StartTheThread(int addingValue)
+        public Thread StartTheThread(int addingValue, Form1 form)
         {
-            var t = new Thread(() => RealStart(addingValue));
+            var t = new Thread(() => RealStart(addingValue, form));
             t.Start();
             return t;
         }
 
-        private static void RealStart(int addingValue)
+        private static void RealStart(int addingValue, Form1 form)
         {
-            mre.WaitOne();
-            MessageBox.Show("next2");
             tree.RB_Insert(addingValue);
+            IS_STEP_BY_STEP = false;
+            form.button5.BeginInvoke((MethodInvoker)(() => form.button5.Enabled = false));
+            form.button3.BeginInvoke((MethodInvoker)(() => form.button3.Enabled = true));
+            form.button4.BeginInvoke((MethodInvoker)(() => form.button4.Enabled = true));
+            form.richTextBox1.BeginInvoke((MethodInvoker)(() => form.richTextBox1.Text += "КОНЕЦ\n"));
             tree.printTree();
         }
 
+        // "Далее"
         private void button5_Click(object sender, EventArgs e)
         {
-            mre.Set();
+            // Разрешает дальнейшее выполнение программы
+            MRE.Set();
+        }
+
+        public void setControlsToBegin()
+        {
+            IS_STEP_BY_STEP = false;
+            button5.BeginInvoke((MethodInvoker)(() => button5.Enabled = false));
+            button3.BeginInvoke((MethodInvoker)(() => button3.Enabled = true));
+            button4.BeginInvoke((MethodInvoker)(() => button4.Enabled = true));
         }
     }
 }
